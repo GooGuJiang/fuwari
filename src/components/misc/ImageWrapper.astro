@@ -7,11 +7,13 @@ interface Props {
   alt?: string
   position?: string
   basePath?: string
+  width?: string | number
+  height?: string | number
 }
 import { Image } from 'astro:assets'
 import { url } from '../../utils/url-utils'
 
-const { id, src, alt, position = 'center', basePath = '/' } = Astro.props
+const { id, src, alt, position = 'center', basePath = '/', width, height } = Astro.props
 const className = Astro.props.class
 
 const isLocal = !(
@@ -26,25 +28,41 @@ const isPublic = src.startsWith('/')
 // https://github.com/withastro/astro/issues/3373
 let img
 if (isLocal) {
-  const files = import.meta.glob<ImageMetadata>('../../**', {
-    import: 'default',
-  })
-  let normalizedPath = path
-    .normalize(path.join('../../', basePath, src))
-    .replace(/\\/g, '/')
-  const file = files[normalizedPath]
-  if (!file) {
-    console.error(`\n[ERROR] Image file not found: ${normalizedPath.replace('../../', 'src/')}`)
+  try {
+    const files = import.meta.glob<ImageMetadata>('../../**', {
+      import: 'default',
+    })
+    let normalizedPath = path
+      .normalize(path.join('../../', basePath, src))
+      .replace(/\\/g, '/')
+    const file = files[normalizedPath]
+    if (!file) {
+      console.error(`\n[ERROR] Image file not found: ${normalizedPath.replace('../../', 'src/')}`)
+    } else {
+      // 确保file是一个函数后再调用它
+      if (typeof file === 'function') {
+        img = await file()
+      } else {
+        console.error(`\n[ERROR] Image import is not a function: ${normalizedPath}`)
+      }
+    }
+  } catch (error) {
+    console.error(`\n[ERROR] Failed to load image: ${src}`, error)
   }
-  img = await file()
 }
 
-const imageClass = 'w-full h-full object-cover'
-const imageStyle = `object-position: ${position}`
----
-<div id={id} class:list={[className, 'overflow-hidden relative']}>
-    <div class="transition absolute inset-0 dark:bg-black/10 bg-opacity-50 pointer-events-none"></div>
-    {isLocal && img && <Image src={img} alt={alt || ""} class={imageClass} style={imageStyle}/>}
-    {!isLocal && <img src={isPublic ? url(src) : src} alt={alt || ""} class={imageClass} style={imageStyle}/>}
-</div>
+const imageClass = 'object-cover'
+const imageStyle = `object-position: ${position}${width ? `; width: ${width}px` : ''}${height ? `; height: ${height}px` : ''}`
 
+// 如果没有设置宽高，使用w-full h-full
+const containerClass = [
+  className, 
+  'overflow-hidden relative',
+  !width && !height ? 'w-full h-full' : ''
+].filter(Boolean).join(' ')
+---
+<div id={id} class={containerClass} style={width || height ? `width: ${width}px; height: ${height}px;` : ''}>
+    <div class="transition absolute inset-0 dark:bg-black/10 bg-opacity-50 pointer-events-none"></div>
+    {isLocal && img && <Image src={img} alt={alt || ""} class={imageClass} style={imageStyle} width={width} height={height}/>}
+    {!isLocal && <img src={isPublic ? url(src) : src} alt={alt || ""} class={imageClass} style={imageStyle} width={width} height={height}/>}
+</div>
