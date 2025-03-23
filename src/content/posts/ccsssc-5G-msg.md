@@ -4,7 +4,7 @@ published: 2025-03-23
 description: ''
 image: ''
 tags: ['CTF','Wireshark',]
-category: ''
+category: 'CTF Writeup'
 draft: false 
 lang: ''
 ---
@@ -83,3 +83,4 @@ Bob在这个时候给Alice发送消息
 # 获得的FLAG
 
 ![image-20250324003413161](https://gu-blog-img.gmoe.cc/20250324003413209.png)
+
