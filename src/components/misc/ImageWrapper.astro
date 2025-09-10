@@ -17,7 +17,6 @@ import { url } from "../../utils/url-utils";
 const { id, src, alt, position = "center", basePath = "/" } = Astro.props;
 const className = Astro.props.class;
 
-
 const isLocal = !(
 	src.startsWith("/") ||
 	src.startsWith("http") ||
@@ -31,7 +30,6 @@ const isPublic = src.startsWith("/");
 // biome-ignore lint/suspicious/noImplicitAnyLet: <check later>
 let img;
 if (isLocal) {
-
 	const files = import.meta.glob<ImageMetadata>("../../**", {
 		import: "default",
 	});
